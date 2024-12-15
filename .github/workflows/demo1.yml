@@ -1,8 +1,29 @@
 name: Events Demo 1
+
 on:
   push:
     branches:
       - main
+
+jobs:
+  lint:
+    runs-on: 
+      ubuntu-latest
+    steps:
+      - name: checkout repo code
+        uses: action/checkout@v3
+      - name: set up node.js
+        uses: npm ci
+        with:
+          node-version: '16'
+        name: run Lint script
+          run: npm run lint
+          
+      
+    
+
+
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -10,13 +31,13 @@ jobs:
       - name: Output event data
         run: echo "${{ toJSON(github.event) }}"
 
-      - name: Get code
+      - name: Checkout repo code
         uses: actions/checkout@v3
         
-      - name: Install dependencies
+      - name: Install dependencies 
         run: npm ci
         
-      - name: Test code
+      - name: Test code # running tests
         run: npm run test
         
       - name: Build code
