@@ -1,3 +1,4 @@
+https://chatgpt.com/g/g-FMjktwiXn-gitops/c/675db476-be2c-800b-8b19-2eddebf9c528
 name: Events Demo 1
 
 on:
@@ -18,7 +19,7 @@ jobs:
           node-version: '16'
         name: run Lint script
           run: npm run lint
-          
+
       
     
 
