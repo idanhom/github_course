@@ -13,13 +13,46 @@ jobs:
     steps:
       - name: checkout repo code
         uses: action/checkout@v3
+
       - name: set up node.js
-        uses: npm ci
+        run: npm ci
         with:
           node-version: '16'
-        name: run Lint script
-          run: npm run lint
+        
+      - name: run linting
+        run: npm run lint
 
+  test:
+    runs-on:
+      ubuntu-latest
+    steps:
+    - name: checkout repo code
+      uses: action/checkout@v3
+    
+    - name: set up node.js
+      run: npm ci
+      with:
+        node-version: '16'
+        
+    - name: test code
+      run: npm run test
+      
+
+  build:
+    runs-on:
+      ubuntu-latest
+    steps:
+    - name: checkout repo code
+      uses: action/checkout@v3
+    
+    - name: set up node.js
+      run: npm ci
+      with:
+        node-version: '16'
+        
+    - name: Build code
+      run: npm run build
+        
       
     
 
@@ -32,17 +65,6 @@ jobs:
       - name: Output event data
         run: echo "${{ toJSON(github.event) }}"
 
-      - name: Checkout repo code
-        uses: actions/checkout@v3
-        
-      - name: Install dependencies 
-        run: npm ci
-        
-      - name: Test code # running tests
-        run: npm run test
-        
-      - name: Build code
-        run: npm run build
         
       - name: Deploy project
         run: echo "Deploying..."
