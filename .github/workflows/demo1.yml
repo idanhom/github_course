@@ -5,64 +5,64 @@ on:
   push:
     branches:
       - main
+  issues:
+    types: 
+      - opened
+      - edited
+      - closed
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo code
+      - name: Checkout repo code
         uses: actions/checkout@v3
 
-      - name: set up node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
         
-      - name: run linting
+      - name: Run linting
         run: npm run lint
 
   test:
-    runs-on:
-      ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-    - name: checkout repo code
-      uses: actions/checkout@v3
+      - name: Checkout repo code
+        uses: actions/checkout@v3
     
-    - name: set up node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
       
-    - name: test code
-      run: npm run test
-      
+      - name: Test code
+        run: npm run test
 
   build:
-    runs-on:
-      ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-    - name: checkout repo code
-      uses: actions/checkout@v3
+      - name: Checkout repo code
+        uses: actions/checkout@v3
     
-    - name: set up node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
         
-    - name: Build code
-      run: npm run build
+      - name: Build code
+        run: npm run build
         
       
-    
+  # Job 4: Log Issue Event Data
+  log-issue-event:
+    name: Log Issue Event Data
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'  # Run this job only for 'issues' events
+    steps:
+      - name: Output issue event details
+        run: echo "Event details: ${{ toJSON(github.event) }}" 
 
-
-
-deploy:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Output event data
-          run: echo "${{ toJSON(github.event) }}"
-
-          
-        - name: Deploy project
-          run: echo "Deploying..."
+      - name: Simulate Deployment
+        run: echo "Deploying..."    
