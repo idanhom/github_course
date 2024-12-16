@@ -63,6 +63,11 @@ jobs:
     steps:
       - name: Output issue event details
         run: echo "${{ toJSON(github.event) }}" 
-
-      - name: Simulate Deployment
-        run: echo "Deploying..."    
+  
+  # successful-job:
+  #   name: successful push
+  #   runs-on: ubuntu-latest
+  #   if: *mina tre förgående jobb lyckas så vill jag sätta ihop hela köret, lint, test, build, till en deploy*
+  
+  # - name: Simulate Deployment
+  #   run: echo "Deploying..."    
