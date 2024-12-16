@@ -1,4 +1,4 @@
-https://chatgpt.com/g/g-FMjktwiXn-gitops/c/675db476-be2c-800b-8b19-2eddebf9c528
+# https://chatgpt.com/g/g-FMjktwiXn-gitops/c/675db476-be2c-800b-8b19-2eddebf9c528
 name: Events Demo 1
 
 on:
@@ -8,14 +8,13 @@ on:
 
 jobs:
   lint:
-    runs-on: 
-      ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: checkout repo code
-        uses: action/checkout@v3
+        uses: actions/checkout@v3
 
       - name: set up node.js
-        run: npm ci
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
         
@@ -30,10 +29,10 @@ jobs:
       uses: action/checkout@v3
     
     - name: set up node.js
-      run: npm ci
+      uses: actions/setup-node@v3
       with:
         node-version: '16'
-        
+      
     - name: test code
       run: npm run test
       
@@ -46,7 +45,7 @@ jobs:
       uses: action/checkout@v3
     
     - name: set up node.js
-      run: npm ci
+      uses: actions/setup-node@v3
       with:
         node-version: '16'
         
@@ -58,13 +57,12 @@ jobs:
 
 
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Output event data
-        run: echo "${{ toJSON(github.event) }}"
+deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Output event data
+          run: echo "${{ toJSON(github.event) }}"
 
-        
-      - name: Deploy project
-        run: echo "Deploying..."
+          
+        - name: Deploy project
+          run: echo "Deploying..."
