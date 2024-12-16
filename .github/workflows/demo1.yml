@@ -62,7 +62,7 @@ jobs:
     if: github.event_name == 'issues'  # Run this job only for 'issues' events
     steps:
       - name: Output issue event details
-        run: echo "Event details: ${{ toJSON(github.event) }}" 
+        run: echo "${{ toJSON(github.event) }}" 
 
       - name: Simulate Deployment
         run: echo "Deploying..."    
