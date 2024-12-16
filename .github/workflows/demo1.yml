@@ -18,13 +18,15 @@ jobs:
       - name: Checkout repo code
         uses: actions/checkout@v3
 
+      - name: 
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
         
       - name: Run linting
-        run: npm run lint
+        run: npm init -y && npm run lint
 
   test:
     runs-on: ubuntu-latest
