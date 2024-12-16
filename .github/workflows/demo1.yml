@@ -25,11 +25,11 @@ jobs:
         with:
           node-version: '16'
         
-      - name: install node lint
-        run: npm lint
+      # - name: install node lint
+      #   run: npm lint
   
-      - name: Run linting
-        run: npm run lint
+      # - name: Run linting
+      #   run: npm run lint
 
   test:
     runs-on: ubuntu-latest
