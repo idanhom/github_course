@@ -1,78 +1,93 @@
-# https://chatgpt.com/g/g-FMjktwiXn-gitops/c/675db476-be2c-800b-8b19-2eddebf9c528
-name: Events Demo 1
+# https://chatgpt.com/g/g-FMjktwiXn-gitops/c/676104c4-86d8-800b-b3d1-ac5848477925
+name: Terraform CI/CD
 
 on:
   push:
-    branches:
-      - main
-  issues:
-    types: 
+    branches: [main, 'dev-**', 'feature/**']
+  pull_request:
+    branches: [main, 'dev-**', 'feature/**']
+  workflow_dispatch:
+  issues: # check this closer
+    types:
       - opened
       - edited
-      - closed
+      - closed # Triggers when an issue is created, edited, or closed
 
 jobs:
-  lint:
+
+  log-issues: # check this closer
+    if: github.event_name == 'issues'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo code
+      - name: Output issue event data
+        run: echo "${{ toJSON(github.event) }}"
+
+        
+  # ------------- Terraform Lint, Format, and Validate -------------
+  lint-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3 # is this the latest?
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7 # what version do i want?
+
+      - name: Terraform Format
+        run: terraform fmt -check # or recursive? try out myself
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  # ------------- Terraform Plan (PR Validation & Push Events) -------------
+  plan:
+    runs-on: ubuntu-latest
+    needs: lint-validate 
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          node-version: '16'
-        
-      # - name: install node lint
-      #   run: npm lint
-  
-      # - name: Run linting
-      #   run: npm run lint
+          terraform_version: 1.5.7 # or another version? check in my code
 
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repo code
-  #       uses: actions/checkout@v3
-    
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: '16'
-      
-  #     - name: Test code
-  #       run: npm run test
+      - name: Terraform Init
+        run: terraform init
 
-  build:
+      - name: Terraform Plan
+        run: terraform plan -input=false #-input=false makes for real automation
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tf-plan
+          path: plan.out # study this this better
+
+  # ------------- Terraform Apply (Deployment) -------------
+  apply:
     runs-on: ubuntu-latest
+    needs: plan # what does it mean that "needs: plan"?
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # what does the 'refs/heads/main' mean?
+
     steps:
-      - name: Checkout repo code
+      - name: Checkout repository
         uses: actions/checkout@v3
-    
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          node-version: '16'
-        
-      - name: Build code
-        run: npm run build
-        
-      
-  # Job 4: Log Issue Event Data
-  log-issue-event:
-    name: Log Issue Event Data
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issues'  # Run this job only for 'issues' events
-    steps:
-      - name: Output issue event details
-        run: echo "${{ toJSON(github.event) }}" 
-  
-  # successful-job:
-  #   name: successful push
-  #   runs-on: ubuntu-latest
-  #   if: *mina tre förgående jobb lyckas så vill jag sätta ihop hela köret, lint, test, build, till en deploy*
-  
-  # - name: Simulate Deployment
-  #   run: echo "Deploying..."    
+          terraform_version: 1.5.7 #check the version I'm using
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+        # WHY: Applies the Terraform plan to provision or update infrastructure.
+        # '-auto-approve' avoids manual confirmation during CI/CD.
