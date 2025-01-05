@@ -1,93 +1,20 @@
-# https://chatgpt.com/g/g-FMjktwiXn-gitops/c/676104c4-86d8-800b-b3d1-ac5848477925
-name: Terraform CI/CD
+name: test project
 
 on:
   push:
-    branches: [main, 'dev-**', 'feature/**']
-  pull_request:
-    branches: [main, 'dev-**', 'feature/**']
-  workflow_dispatch:
-  issues: # check this closer
-    types:
-      - opened
-      - edited
-      - closed # Triggers when an issue is created, edited, or closed
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-
-  log-issues: # check this closer
-    if: github.event_name == 'issues'
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Output issue event data
-        run: echo "${{ toJSON(github.event) }}"
-
-        
-  # ------------- Terraform Lint, Format, and Validate -------------
-  lint-validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3 # is this the latest?
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: clone repo
+        uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7 # what version do i want?
-
-      - name: Terraform Format
-        run: terraform fmt -check # or recursive? try out myself
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-  # ------------- Terraform Plan (PR Validation & Push Events) -------------
-  plan:
-    runs-on: ubuntu-latest
-    needs: lint-validate 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7 # or another version? check in my code
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Plan
-        run: terraform plan -input=false #-input=false makes for real automation
-
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v3
-        with:
-          name: tf-plan
-          path: plan.out # study this this better
-
-  # ------------- Terraform Apply (Deployment) -------------
-  apply:
-    runs-on: ubuntu-latest
-    needs: plan # what does it mean that "needs: plan"?
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # what does the 'refs/heads/main' mean?
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7 #check the version I'm using
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -input=false
-        # WHY: Applies the Terraform plan to provision or update infrastructure.
-        # '-auto-approve' avoids manual confirmation during CI/CD.
+          terraform_version: "1.9.8"
