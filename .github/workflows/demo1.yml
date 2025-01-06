@@ -12,6 +12,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: testing
     steps:
       - name: clone repo
         uses: actions/checkout@v4
