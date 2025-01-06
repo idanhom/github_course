@@ -1,9 +1,10 @@
-name: test project
+name: Improved Terraform Workflow
 
 on:
   push:
     branches:
       - '**'
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,32 +12,94 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  lint:
+    name: Lint and Validate Terraform Code
     runs-on: ubuntu-latest
     environment: testing
     steps:
-      - name: clone repo
+      - name: Clone Repository
         uses: actions/checkout@v4
 
-      - name: Azure login
+      - name: Azure Login
         uses: Azure/login@v2.2.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        
-      - uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9.8"
-      
-      - name: terraform init
+
+      - name: Run Terraform Fmt Check
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Report Formatting Issues
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "::error::Terraform formatting issues found. Run 'terraform fmt' locally to fix them."
+          exit 1
+
+      - name: Run Terraform Validate
+        run: terraform validate
+
+      - name: Install tflint
+        run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Run tflint
+        run: tflint
+
+  plan:
+    name: Plan Infrastructure Changes
+    runs-on: ubuntu-latest
+    environment: testing
+    needs: lint
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: Azure/login@v2.2.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform Init
         run: terraform init
 
-      - name: terraform plan
+      - name: Terraform Plan
         run: terraform plan
 
-      - name: terraform apply
-        run: terraform apply -auto-approve
+  apply:
+    name: Apply Infrastructure Changes
+    runs-on: ubuntu-latest
+    environment: testing
+    needs: plan
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v4
 
-  
+      - name: Azure Login
+        uses: Azure/login@v2.2.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
