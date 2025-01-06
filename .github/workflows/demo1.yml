@@ -17,8 +17,20 @@ jobs:
     runs-on: ubuntu-latest
     environment: testing
     steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - uses: terraform-linters/setup-tflint@v4
+        name: Setup TFLint
+        with:
+          tflint_version: v0.52.0
+
       - name: Clone Repository
         uses: actions/checkout@v4
+        with:
+          path: ~/.tflint.d/plugins
 
       - name: Azure Login
         uses: Azure/login@v2.2.0
@@ -27,10 +39,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.8"
 
       - name: terraform init
         run: terraform init
@@ -38,6 +46,20 @@ jobs:
       - name: Run Terraform Fmt Check
         run: terraform fmt -recursive
         continue-on-error: true
+
+
+      - name: Show version
+        run: tflint --version
+
+      - name: Init TFLint
+        run: tflint --init
+        env:
+          # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Run TFLint
+        run: tflint -f compact
+
 
       - name: Run Terraform Validate
         run: terraform validate
