@@ -17,21 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: testing
     steps:
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.8"
-
-      - uses: terraform-linters/setup-tflint@v4
-        name: Setup TFLint
-        with:
-          tflint_version: v0.52.0
-
+      # Step 1: Checkout Repository
       - name: Clone Repository
         uses: actions/checkout@v4
-        with:
-          path: ~/.tflint.d/plugins
 
+      # Step 2: Azure Login (Optional in Linting Context)
       - name: Azure Login
         uses: Azure/login@v2.2.0
         with:
@@ -39,36 +29,37 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Step 3: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
 
-      - name: terraform init
-        run: terraform init
-        
+      # Step 4: Run Terraform Fmt Check
       - name: Run Terraform Fmt Check
-        run: terraform fmt -recursive
+        run: terraform fmt -recursive -check
         continue-on-error: true
 
-
-      - name: Show version
-        run: tflint --version
-
-      - name: Init TFLint
-        run: tflint --init
-        env:
-          # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Run TFLint
-        run: tflint -f compact
-
-
+      # Step 5: Run Terraform Validate
       - name: Run Terraform Validate
         run: terraform validate
 
-      - name: Install tflint
-        run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      # Step 6: Setup TFLint
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.52.0
 
-      - name: Run tflint
-        run: tflint
+      # Step 7: Init TFLint Plugins
+      - name: Init TFLint Plugins
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Prevent rate limiting
+
+      # Step 8: Run TFLint
+      - name: Run TFLint
+        run: tflint -f compact
+
 
   plan:
     name: Plan Infrastructure Changes
