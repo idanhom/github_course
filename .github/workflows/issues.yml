@@ -1,6 +1,6 @@
 name: issues
 
-on: push
+on: issues
 
 permissions:
   id-token: write
