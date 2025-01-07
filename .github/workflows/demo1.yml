@@ -41,6 +41,10 @@ jobs:
       #   continue-on-error: true
 
       # Step 5: Run Terraform Validate
+      - name: Run Terraform init
+        run: terraform init
+
+      # Step 5: Run Terraform Validate
       - name: Run Terraform Validate
         run: terraform validate
 
