@@ -1,0 +1,10 @@
+name: issues
+
+on: issues
+
+jobs:
+  issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dump github context
+        run: echo {{ toJSON(github.event) }}
